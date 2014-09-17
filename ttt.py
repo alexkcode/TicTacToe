@@ -237,7 +237,7 @@ class grid:
 		currEmpties = 0
 		for pos in self.positions:
 			sq = self.positions[pos] 
-			if sq.empties > currEmpties and sq.mark == '':
+			if sq.empties >= currEmpties and sq.mark == '':
 				currEmpties = sq.empties
 				bestPos = pos
 		return bestPos
@@ -302,6 +302,7 @@ class grid:
 		elif player_win_move:
 			self.makeMark(player_win_move, 'O')
 		else:
+			print self.findPotential()
 			self.makeMark(self.findPotential(), 'O')
 
 	def checkValid(self, input):
