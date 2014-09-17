@@ -156,6 +156,14 @@ class GridTest(unittest.TestCase):
 		self.test_grid.computerMove()
 		self.assertEqual(self.test_grid.marked[-1], (-1, 0))
 
+	def test_checkValid(self):
+		# test = self.test_grid.checkValid(self.test_grid.parseInput('asb(,asd)'))
+		# self.assertFalse(test)
+		test = self.test_grid.checkValid(self.test_grid.parseInput('(9,9)'))
+		self.assertFalse(test)
+		test = self.test_grid.checkValid(self.test_grid.parseInput('(0,0)'))
+		self.assertTrue(test)
+
 class GameTest(test.FunctionalTest):
 	pass
 

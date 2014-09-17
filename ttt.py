@@ -304,18 +304,31 @@ class grid:
 		else:
 			self.makeMark(self.findPotential(), 'O')
 
+	def checkValid(self, input):
+		for x in input:
+			if isinstance(x, int) and abs(x) <= 1:
+				return True
+			else:
+				return False
+
+	def getInput(self):
+		self.showGrid()
+		print "Where do you want your \'X\'?"
+		message = "Please enter the coordinates of the location:\n"
+		test_input = None
+		while True:
+			self.showGrid()
+			test_input = self.parseInput(raw_input(message))
+			valid = self.checkValid(test_input)
+			if valid and self.positions[test_input].mark == '':
+				break
+			else:
+				print 'Invalid location, please choose another.'
+		return test_input
+
 	def step(self, move='player'):
 		if move == 'player':
-			self.showGrid()
-			print "Where do you want your \'X\'?"
-			message = "Please enter the coordinates of the location:\n"
-			while True:
-				test_input = self.parseInput(raw_input(message))
-				if self.positions[test_input].mark == '':
-					self.playerMove(test_input)
-					break
-				else:
-					print 'Invalid location, please choose another.'
+			self.playerMove(self.getInput())
 		elif move == 'computer':
 			self.computerMove()
 		else:
