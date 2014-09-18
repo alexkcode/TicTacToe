@@ -1,7 +1,20 @@
 import itertools, collections
+from functools import partial
 
 def opposite(A):
 	return tuple([-1*a for a in A])
+
+def forSome(conditional, set, arg0):
+	for element in set:
+		if conditional(arg0, element):
+			return True
+	return False
+
+def forAll(conditional, set, arg0):
+	for element in set:
+		if not conditional(arg0, element):
+			return False
+	return True
 
 def alignCheck(A, B, level='line'):
 	"""Are A and B on the same row or column?"""
@@ -82,6 +95,7 @@ class square:
 		self.mark = mark
 		self.neighbors = neighbors
 		self.empties = len(neighbors)
+		self.X_count = 0
 
 class grid:
 	"""The grid for the tic tac toe environment."""
@@ -187,8 +201,6 @@ class grid:
 			loc : tuple
 				location of last mark
 		"""
-		if len(self.marked) == 3**self.dim:
-			return 0
 		loc = self.marked[-1]
 		sq1 = self.positions[loc]
 		sq3 = None
@@ -212,6 +224,8 @@ class grid:
 						return -1
 					elif sq1.mark == 'X':
 						return 1
+		if len(self.marked) == 3**self.dim:
+			return 0
 		return None
 
 	def makeMark(self, loc, mark):
@@ -228,23 +242,56 @@ class grid:
 		for pos in self.positions:
 			if pos in self.positions[loc].neighbors:
 				self.positions[pos].empties -= 1
+				if mark == 'X':
+					self.positions[pos].X_count += 1
 		# print self.checkStatus()
 
+	def findLastMark(self, mark):
+		if self.marked:
+			for i in range(1, len(self.marked)):
+				pos = self.marked[-i]
+				if self.positions[pos].mark == mark:
+					return pos
+		else:
+			return None
+
 	def findPotential(self):
-		"""Which empty square in the grid has the most empty neighborhood?"""
-		# for ties, the first one that matches the conditions is returned
+		"""Which empty square in the grid has the most empty neighborhood?
+		For ties, the first one that matches the conditions is returned"""
 		bestPos = None
 		currEmpties = 0
+		X_pos = [x for x in self.positions if self.positions[x].mark == 'X']
+		O_pos = [x for x in self.positions if self.positions[x].mark == 'O']
+
+		def distCheck(A, B):
+			for a,b in zip(A, B):
+				if abs(a - b) >= 2:
+					return False
+			return True
+
+		def openCheck(A, B):
+			openPos = findDiff(A, B)
+			if openPos and self.positions[openPos].mark == '':
+				return True
+			else:
+				return False
+
 		for pos in self.positions:
-			sq = self.positions[pos] 
+			sq = self.positions[pos]
 			if sq.empties >= currEmpties and sq.mark == '':
-				currEmpties = sq.empties
-				bestPos = pos
+				min_X = len(X_pos) >= 2
+				closeToX = forSome(distCheck, X_pos, pos)
+				open = forSome(openCheck, O_pos, pos)
+				if min_X and closeToX and open:
+					currEmpties = sq.empties 
+					bestPos = pos
+				elif not min_X or not open:
+					currEmpties = sq.empties
+					bestPos = pos
 		return bestPos
 
 	def findMatch(self, mark):
 		"""Where is there 2/3 in a row marked?"""
-		# mark = self.positions[loc].mark
 		for pos0, pos1 in itertools.combinations(self.marked, 2):
 			mark0 = self.positions[pos0].mark
 			mark1 = self.positions[pos1].mark
@@ -302,7 +349,6 @@ class grid:
 		elif player_win_move:
 			self.makeMark(player_win_move, 'O')
 		else:
-			print self.findPotential()
 			self.makeMark(self.findPotential(), 'O')
 
 	def checkValid(self, input):
